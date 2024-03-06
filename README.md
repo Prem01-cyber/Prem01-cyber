@@ -25,11 +25,6 @@ I'm a passionate developer specialized in web development, cybersecurity, artifi
 ## 💬 Ask me about ...
 - Anything related to web development, AI, ML, and cybersecurity. I love discussing these topics and sharing my knowledge.
 
-## 📫 How to reach me:
-- **Email:** [Insert Your Email]
-- **LinkedIn:** [Insert Your LinkedIn URL]
-- **Twitter:** [Insert Your Twitter Handle]
-
 ## ⚡ Fun fact:
 - I'm not only a tech enthusiast but also an avid explorer of the digital and physical world, always curious about learning something new!
 
