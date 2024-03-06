@@ -24,11 +24,14 @@
 
 ## 🌱 I’m currently learning ...
 🧠 Advanced concepts in **AI** and **ML** algorithms.
+
 🔒 Cutting-edge **cybersecurity practices** to enhance network and data security.
 
 ## 👯 I’m looking to collaborate on ...
 🌐 Projects focused on **web development** with a keen eye for design and user experience.
+
 🤖 Innovative applications leveraging **AI and ML** for societal benefits.
+
 🛡️ Cybersecurity projects aimed at developing safer digital environments.
 
 ## 🤔 I’m looking for help with ...
