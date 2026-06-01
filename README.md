@@ -4,7 +4,7 @@
 
 <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=800&color=0E75B6&center=true&vCenter=true&width=600&lines=Developer;Web+%C2%B7+Cybersecurity+%C2%B7+AI+%2F+ML;Building+practical%2C+secure+software" alt="Typing SVG" /></a>
 
-<a href="https://github.com/Prem01-cyber"><img src="https://img.shields.io/github/followers/Prem01-cyber?label=Follow&style=social" alt="GitHub followers" /></a>
+<a href="https://github.com/Prem01-cyber"><img src="https://img.shields.io/badge/GitHub-Prem01--cyber-181717?style=flat&logo=github&logoColor=white" alt="GitHub" /></a>
 <img src="https://komarev.com/ghpvc/?username=Prem01-cyber&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
 <a href="mailto:jampuramprem01@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=flat&logo=gmail&logoColor=white" alt="Email" /></a>
 
