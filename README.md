@@ -1,13 +1,12 @@
 <div align="center">
 
-# Prem Jampuram
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0e75b6,100:6f42c1&height=200&section=header&text=Prem%20Jampuram&fontSize=55&fontColor=ffffff&animation=fadeIn&fontAlignY=38" alt="header" width="100%" />
 
-**Developer · Web · Cybersecurity · AI / ML**
+<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=24&duration=3000&pause=800&color=0E75B6&center=true&vCenter=true&width=600&lines=Developer;Web+%C2%B7+Cybersecurity+%C2%B7+AI+%2F+ML;Building+practical%2C+secure+software" alt="Typing SVG" /></a>
 
 <a href="https://github.com/Prem01-cyber"><img src="https://img.shields.io/github/followers/Prem01-cyber?label=Follow&style=social" alt="GitHub followers" /></a>
 <img src="https://komarev.com/ghpvc/?username=Prem01-cyber&label=Profile%20views&color=0e75b6&style=flat" alt="Profile views" />
-
-<a href="mailto:jampuramprem01@gmail.com"><img src="https://img.shields.io/badge/Email-jampuramprem01@gmail.com-D14836?style=flat&logo=gmail&logoColor=white" alt="Email" /></a>
+<a href="mailto:jampuramprem01@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=flat&logo=gmail&logoColor=white" alt="Email" /></a>
 
 </div>
 
@@ -54,16 +53,11 @@ quantum computing with AI and cryptography.
 
 <div align="center">
 
-<img height="180em" src="https://github-readme-stats.vercel.app/api?username=Prem01-cyber&show_icons=true&count_private=true&hide_border=true&theme=tokyonight" alt="GitHub stats" />
-<img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Prem01-cyber&layout=compact&hide_border=true&theme=tokyonight" alt="Top languages" />
+<img src="https://github-readme-streak-stats.herokuapp.com?user=Prem01-cyber&hide_border=true&theme=tokyonight&date_format=M%20j%5B%2C%20Y%5D" alt="GitHub streak" />
 
 <br/>
 
-<img src="https://streak-stats.demolab.com?user=Prem01-cyber&hide_border=true&theme=tokyonight" alt="GitHub streak" />
-
-<br/>
-
-<img src="https://github-readme-activity-graph.vercel.app/graph?username=Prem01-cyber&theme=tokyo-night&hide_border=true&area=true" alt="Contribution graph" />
+<img src="https://github-readme-activity-graph.vercel.app/graph?username=Prem01-cyber&theme=tokyo-night&hide_border=true&area=true&radius=16&custom_title=Contribution%20Activity" alt="Contribution graph" width="100%" />
 
 </div>
 
@@ -76,5 +70,7 @@ quantum computing with AI and cryptography.
 ---
 
 <div align="center">
-<sub>Always learning. Always building.</sub>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6f42c1,100:0e75b6&height=120&section=footer" alt="footer" width="100%" />
+
 </div>
