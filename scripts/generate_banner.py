@@ -1,180 +1,132 @@
 #!/usr/bin/env python3
 """Generate the daily animated banner SVGs (light + dark).
 
-The layout is deterministic for a given UTC date, so re-running on the same day
-produces byte-identical output (no empty commits) while every new day yields a
-brand new circuit.
+The banner spells the handle in contribution-graph cells, so it shares a visual
+language with the snake below it in the README. Cell intensities and the noise
+scatter are seeded by the UTC date: identical on re-runs (no empty commits),
+new every day.
 """
 
 from __future__ import annotations
 
 import argparse
 import datetime as dt
-import math
 import random
 from pathlib import Path
 
-WIDTH, HEIGHT = 880, 220
-MARGIN_X, MARGIN_Y = 28, 26
-CELL = 40
-COLS = (WIDTH - 2 * MARGIN_X) // CELL
-ROWS = (HEIGHT - 2 * MARGIN_Y) // CELL
-CORNER = 9
+WORDMARK = "PREM01-CYBER"
+
+PITCH = 10          # centre-to-centre distance between cells
+CELL = 7            # drawn size of a cell
+RADIUS = 2
+GLYPH_W, GLYPH_H = 5, 7
+GAP = 1             # blank columns between glyphs
+
+WIDTH, HEIGHT = 840, 170
+
+# 5x7 bitmap font, top row first.
+FONT = {
+    "P": ("####.", "#...#", "#...#", "####.", "#....", "#....", "#...."),
+    "R": ("####.", "#...#", "#...#", "####.", "#..#.", "#...#", "#...#"),
+    "E": ("#####", "#....", "#....", "####.", "#....", "#....", "#####"),
+    "M": ("#...#", "##.##", "#.#.#", "#...#", "#...#", "#...#", "#...#"),
+    "C": (".###.", "#...#", "#....", "#....", "#....", "#...#", ".###."),
+    "Y": ("#...#", "#...#", ".#.#.", "..#..", "..#..", "..#..", "..#.."),
+    "B": ("####.", "#...#", "#...#", "####.", "#...#", "#...#", "####."),
+    "0": (".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."),
+    "1": ("..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."),
+    "-": (".....", ".....", ".....", "#####", ".....", ".....", "....."),
+}
 
 THEMES = {
     "light": {
-        "bg": "#fbfcfe",
-        "panel": "#f2f5fa",
-        "grid": "#dde3ec",
-        "trace": "#c2ccdb",
-        "text": "#5b6675",
-        "accents": ["#2f81f7", "#8957e5", "#1a7f37", "#bc4c00"],
+        "bg": "none",
+        "empty": "#ebedf0",
+        "levels": ["#9be9a8", "#40c463", "#30a14e", "#216e39"],
+        "text": "#8b949e",
     },
     "dark": {
-        "bg": "#0d1117",
-        "panel": "#111826",
-        "grid": "#1c2432",
-        "trace": "#263041",
-        "text": "#7d8590",
-        "accents": ["#58a6ff", "#bc8cff", "#3fb950", "#f0883e"],
+        "bg": "none",
+        "empty": "#161b22",
+        "levels": ["#0e4429", "#006d32", "#26a641", "#39d353"],
+        "text": "#6e7681",
     },
 }
 
 
-def node_xy(col: int, row: int) -> tuple[float, float]:
-    return MARGIN_X + col * CELL, MARGIN_Y + row * CELL
-
-
-def rounded_path(points: list[tuple[float, float]], radius: float = CORNER) -> str:
-    """Orthogonal polyline rendered with rounded corners."""
-    if len(points) < 2:
-        return ""
-    d = [f"M {points[0][0]:.1f} {points[0][1]:.1f}"]
-    for i in range(1, len(points) - 1):
-        prev, cur, nxt = points[i - 1], points[i], points[i + 1]
-        r = min(radius, dist(prev, cur) / 2, dist(cur, nxt) / 2)
-        a = toward(cur, prev, r)
-        b = toward(cur, nxt, r)
-        d.append(f"L {a[0]:.1f} {a[1]:.1f}")
-        d.append(f"Q {cur[0]:.1f} {cur[1]:.1f} {b[0]:.1f} {b[1]:.1f}")
-    d.append(f"L {points[-1][0]:.1f} {points[-1][1]:.1f}")
-    return " ".join(d)
-
-
-def dist(a: tuple[float, float], b: tuple[float, float]) -> float:
-    return math.hypot(b[0] - a[0], b[1] - a[1])
-
-
-def toward(origin, target, amount: float) -> tuple[float, float]:
-    d = dist(origin, target) or 1.0
-    return (
-        origin[0] + (target[0] - origin[0]) * amount / d,
-        origin[1] + (target[1] - origin[1]) * amount / d,
-    )
-
-
-def path_length(points: list[tuple[float, float]]) -> float:
-    return sum(dist(points[i], points[i + 1]) for i in range(len(points) - 1))
-
-
-def build_traces(rng: random.Random) -> list[list[tuple[int, int]]]:
-    """Random orthogonal walks that always advance left to right."""
-    traces: list[list[tuple[int, int]]] = []
-    rows = list(range(ROWS + 1))
-    rng.shuffle(rows)
-    for row in rows[: rng.randint(4, 5)]:
-        col, r = 0, row
-        cells = [(col, r)]
-        while col < COLS:
-            step = rng.choice([1, 1, 2, 2, 3])
-            col = min(COLS, col + step)
-            cells.append((col, r))
-            if col < COLS and rng.random() < 0.62:
-                target = max(0, min(ROWS, r + rng.choice([-2, -1, 1, 2])))
-                if target != r:
-                    r = target
-                    cells.append((col, r))
-        traces.append(cells)
-    return traces
+def glyph_columns(text: str) -> tuple[set[tuple[int, int]], int]:
+    """Map the wordmark onto grid coordinates; return lit cells and total width."""
+    lit: set[tuple[int, int]] = set()
+    col = 0
+    for char in text:
+        rows = FONT[char]
+        for r, row in enumerate(rows):
+            for c, pixel in enumerate(row):
+                if pixel == "#":
+                    lit.add((col + c, r))
+        col += GLYPH_W + GAP
+    return lit, col - GAP
 
 
 def render(theme_name: str, day: dt.date) -> str:
     theme = THEMES[theme_name]
     rng = random.Random(f"{day.isoformat()}::prem01-cyber")
 
-    traces = build_traces(rng)
-    parts: list[str] = []
-    css: list[str] = []
-    junctions: set[tuple[int, int]] = set()
+    lit, cols = glyph_columns(WORDMARK)
+    grid_w = cols * PITCH - (PITCH - CELL)
+    grid_h = GLYPH_H * PITCH - (PITCH - CELL)
+    x0 = round((WIDTH - grid_w) / 2)
+    y0 = round((HEIGHT - grid_h) / 2) - 6
 
-    for i, cells in enumerate(traces):
-        pts = [node_xy(c, r) for c, r in cells]
-        junctions.update(cells)
-        accent = theme["accents"][i % len(theme["accents"])]
-        d = rounded_path(pts)
-        length = path_length(pts)
-        dur = round(length / rng.uniform(70, 110), 2)
-        delay = round(rng.uniform(0, 3), 2)
+    # A scatter of faint cells around the wordmark keeps it from floating.
+    noise: dict[tuple[int, int], int] = {}
+    for _ in range(90):
+        spot = (rng.randrange(-5, cols + 5), rng.randrange(-3, GLYPH_H + 3))
+        if spot not in lit and rng.random() < 0.5:
+            noise[spot] = rng.choice([0, 0, 0, 1])
 
-        parts.append(
-            f'<path class="trace" d="{d}" stroke="{theme["trace"]}"/>'
-            f'<path class="pkt p{i}" d="{d}" stroke="{accent}"/>'
-        )
-        css.append(
-            f"@keyframes flow{i}{{from{{stroke-dashoffset:{length:.0f}}}"
-            f"to{{stroke-dashoffset:0}}}}"
-            f".p{i}{{stroke-dasharray:26 {length:.0f};"
-            f"animation:flow{i} {dur}s linear {delay}s infinite}}"
-        )
+    cells: list[str] = []
 
-    for j, (c, r) in enumerate(sorted(junctions)):
-        x, y = node_xy(c, r)
-        accent = theme["accents"][(c + r) % len(theme["accents"])]
-        lit = rng.random() < 0.30
-        fill = accent if lit else theme["grid"]
-        delay = round(rng.uniform(0, 4), 2)
-        cls = "node pulse" if lit else "node"
-        parts.append(
-            f'<circle class="{cls}" cx="{x:.0f}" cy="{y:.0f}" r="3" '
-            f'fill="{fill}" style="animation-delay:{delay}s"/>'
+    def emit(col: int, row: int, level: int, klass: str) -> None:
+        x = x0 + col * PITCH
+        y = y0 + row * PITCH
+        # The wave sweeps left to right with a slight downward tilt.
+        delay = round((col * 0.9 + row * 1.6) * 0.022, 2)
+        cells.append(
+            f'<rect class="{klass}" x="{x}" y="{y}" width="{CELL}" height="{CELL}" '
+            f'rx="{RADIUS}" fill="{theme["levels"][level]}" '
+            f'style="animation-delay:{delay}s"/>'
         )
 
-    dots = "".join(
-        f'<circle cx="{20 + k * 14}" cy="18" r="4" fill="{theme["accents"][k]}" '
-        f'opacity="0.85"/>'
-        for k in range(3)
-    )
+    for col, row in sorted(noise):
+        emit(col, row, noise[(col, row)], "dim")
+
+    for col, row in sorted(lit):
+        # Only the top two levels, so the wordmark never breaks up.
+        emit(col, row, rng.choice([2, 3, 3, 3]), "on")
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" \
-viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="Generative circuit banner for {day}">
+viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-label="prem01-cyber, drawn in contribution cells ({day})">
   <style>
-    .trace {{ fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }}
-    .pkt {{ fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }}
-    .node {{ }}
-    .pulse {{ animation:pulse 3.2s ease-in-out infinite; transform-origin:center; }}
-    @keyframes pulse {{ 0%,100%{{opacity:.35;r:3}} 50%{{opacity:1;r:5}} }}
-    text {{ font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace; }}
+    .on {{ animation: on 3.4s ease-in-out infinite; }}
+    .dim {{ opacity:.4; animation: dim 3.4s ease-in-out infinite; }}
+    @keyframes on {{ 0%,100% {{ opacity:.62 }} 45% {{ opacity:1 }} }}
+    @keyframes dim {{ 0%,100% {{ opacity:.18 }} 45% {{ opacity:.55 }} }}
+    text {{ font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+            font-size:11px; letter-spacing:.14em; }}
     @media (prefers-reduced-motion: reduce) {{
-      .pkt,.pulse {{ animation:none }}
+      .on,.dim {{ animation:none }}
     }}
   </style>
-  <rect width="{WIDTH}" height="{HEIGHT}" rx="14" fill="{theme["bg"]}"/>
-  <rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="13.5"
-        fill="none" stroke="{theme["grid"]}"/>
-  <rect x="1" y="1" width="{WIDTH - 2}" height="36" rx="13" fill="{theme["panel"]}"/>
-  {dots}
-  <text x="66" y="23" font-size="12" fill="{theme["text"]}">~/prem01-cyber &#8212; build &amp; break</text>
-  <text x="{WIDTH - 20}" y="23" font-size="12" text-anchor="end" fill="{theme["text"]}">{day.isoformat()}</text>
-  <g transform="translate(0,20)">
-    {"".join(parts)}
-  </g>
+  {"".join(cells)}
+  <text x="{WIDTH // 2}" y="{HEIGHT - 16}" text-anchor="middle" fill="{theme["text"]}">{day.isoformat()}</text>
 </svg>
 """
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="assets", type=Path)
+    ap.add_argument("--out", default=Path("assets"), type=Path)
     ap.add_argument("--date", default=None, help="YYYY-MM-DD (defaults to today, UTC)")
     args = ap.parse_args()
 
