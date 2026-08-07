@@ -1,0 +1,56 @@
+name: daily
+
+on:
+  schedule:
+    # Twice a day (UTC) so a delayed/dropped run still leaves the day green.
+    - cron: "17 1 * * *"
+    - cron: "17 13 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - ".github/workflows/daily.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate today's banner
+        run: python scripts/generate_banner.py --out assets
+
+      - name: Generate contribution snake
+        uses: Platane/snk@v3
+        continue-on-error: true
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            assets/snake-light.svg?palette=github-light
+            assets/snake-dark.svg?palette=github-dark
+
+      - name: Commit refreshed assets
+        run: |
+          set -euo pipefail
+          # Author as the account owner so the commit counts on the profile graph.
+          git config user.name "Prem01-cyber"
+          git config user.email "jampuramprem01@gmail.com"
+          git add assets
+          if git diff --staged --quiet; then
+            echo "assets already up to date for $(date -u +%F)"
+          else
+            git commit -m "chore: daily refresh $(date -u +%F)"
+            git push
+          fi
